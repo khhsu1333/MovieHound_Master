@@ -11,8 +11,28 @@ exports.index = function(req, res, next) {
 // GET slave info.
 exports.slave = function(req, res, next) {
 	var db = req.db;
-	db.collection('slaves').find().toArray(function (err, items) {
-		res.json(items);
+	db.collection('slaves').find({}, function(err, cursor) {
+		cursor.toArray(function(err, documents) {
+			slaves = documents;
+
+			// Sort snapshot list
+			utils.sortResults(slaves, 'speed', false);
+			
+			// Response matched list
+			res.json(slaves.slice(0, slaves.length >= 10 ? 10 : slaves.length));
+		});
+	});
+};
+
+// POST receive heartbeat
+exports.heartbeat = function(req, res, next) {
+	var db = req.db;
+	ip = req.param('ip');
+	speed = req.param('speed');
+	db.collection('slaves').update({ip : ip}, {$set : {speed : speed}}, function(err, result) {
+		res.send(
+			(err === null) ? { error: undefined } : { error: err }
+		);
 	});
 };
 

@@ -35,6 +35,7 @@ app.use(function(req,res,next) {
 app.get('/', routes.index);
 app.get('/slave', routes.slave);
 app.post('/add_slave', routes.add_slave);
+app.post('/heartbeat', routes.heartbeat);
 app.post('/search', routes.search);
 
 
