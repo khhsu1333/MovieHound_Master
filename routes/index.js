@@ -8,15 +8,49 @@ exports.index = function(req, res, next) {
 	res.render('index', { title: 'Express' });
 };
 
-// GET slave info.
+// GET slave list.
 exports.slave = function(req, res, next) {
 	var db = req.db;
 	db.collection('slaves').find({}, function(err, cursor) {
 		cursor.toArray(function(err, documents) {
 			slaves = documents;
+			var cur = new Date();
+
+			// Calculate status
+			for(i=0; i < slaves.length; i++) {
+				// 若是超過 2 分鐘則判斷 Slave 已經斷線
+				start = new Date(documents[i].timestamp);
+				if(cur - start >120000) {
+					slaves[i].status = false;
+				} else {
+					slaves[i].status = true;
+				}
+			}
+			// Response matched list
+			res.json(slaves);
+		});
+	});
+};
+
+// GET ask slave address to upload data.
+exports.allocate = function(req, res, next) {
+	var db = req.db;
+	db.collection('slaves').find({}, function(err, cursor) {
+		cursor.toArray(function(err, documents) {
+			slaves = [];
+			var cur = new Date();
+
+			// Calculate status
+			for(i=0; i < documents.length; i++) {
+				// 若是超過 2 分鐘則判斷 Slave 已經斷線
+				start = new Date(documents[i].timestamp);
+				if(cur - start <= 120000) {
+					slaves.push(documents[i]);
+				}
+			}
 
 			// Sort snapshot list
-			utils.sortResults(slaves, 'speed', false);
+			utils.sortResults(slaves, 'speed', true);
 			
 			// Response matched list
 			res.json(slaves.slice(0, slaves.length >= 10 ? 10 : slaves.length));
@@ -27,23 +61,31 @@ exports.slave = function(req, res, next) {
 // POST receive heartbeat
 exports.heartbeat = function(req, res, next) {
 	var db = req.db;
-	ip = req.param('ip');
+	name = req.param('name');
+	IP = req.param('IP');
 	speed = req.param('speed');
-	db.collection('slaves').update({ip : ip}, {$set : {speed : speed}}, function(err, result) {
-		res.send(
-			(err === null) ? { error: undefined } : { error: err }
-		);
-	});
-};
-
-// POST add new slave.
-exports.add_slave = function(req, res, next) {
-	var db = req.db;
-	db.collection('slaves').update(req.body, req.body, { upsert : true }, function(err, result) {
-		res.send(
-			(err === null) ? { error: undefined } : { error: err }
-		);
-	});
+	timestamp = req.param('timestamp');
+	amount = req.param('amount');
+	if(name != undefined && IP != undefined && speed != undefined && timestamp != undefined && amount != undefined) {
+		a = db.collection('slaves').find({name:name, IP:IP}).toArray(function(err, documents) {
+			if(documents.length == 0) {
+				db.collection('slaves').insert(req.body, function(err, result) {
+					console.log('Add new slave.');
+					res.send(
+						(err === null) ? { error: undefined } : { error: err }
+					);
+				});
+			} else if(documents.length == 1) {
+				db.collection('slaves').update({name:name, IP:IP}, {$set:{speed:speed, timestamp:timestamp, amount:amount}}, function(err, result) {
+					res.send(
+						(err === null) ? { error: undefined } : { error: err }
+					);
+				});
+			} else {
+				db.collection('slaves').remove({name:name, IP:IP});
+			}
+		});
+	}
 };
 
 // POST search snapshots.
