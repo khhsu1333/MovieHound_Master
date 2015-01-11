@@ -63,7 +63,7 @@ function searchMovie(event) {
 				$.each(data, function() {
 					tableContent += '<tr>';
 					tableContent += '<td>' + i + '</td>';
-					tableContent += '<td><image src="http://' + this.slaveIP + '/image/' + this.filename + '" /></td>';
+					tableContent += '<td><image src="http://' + this.slave + '/image/' + this.filename + '" /></td>';
 					tableContent += '<td>' + this.movie + '</td>';
 					tableContent += '<td>' + this.time + '</td>';
 					tableContent += '<td>' + this.distance + '</td>';
