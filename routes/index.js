@@ -18,9 +18,9 @@ exports.slave = function(req, res, next) {
 
 			// Calculate status
 			for(i=0; i < slaves.length; i++) {
-				// 若是超過 2 分鐘則判斷 Slave 已經斷線
+				// 若是超過 20 分鐘則判斷 Slave 已經斷線
 				start = new Date(documents[i].timestamp);
-				if(cur - start >120000) {
+				if(cur - start >1200000) {
 					slaves[i].status = false;
 				} else {
 					slaves[i].status = true;
@@ -42,15 +42,15 @@ exports.allocate = function(req, res, next) {
 
 			// Calculate status
 			for(i=0; i < documents.length; i++) {
-				// 若是超過 2 分鐘則判斷 Slave 已經斷線
+				// 若是超過 20 分鐘則判斷 Slave 已經斷線
 				start = new Date(documents[i].timestamp);
-				if(cur - start <= 120000) {
+				if(cur - start <= 1200000) {
 					slaves.push(documents[i]);
 				}
 			}
 
 			// Sort snapshot list
-			utils.sortResults(slaves, 'speed', true);
+			utils.sortResults(slaves, 'speed', false);
 			
 			// Response matched list
 			res.json(slaves.slice(0, slaves.length >= 10 ? 10 : slaves.length));
@@ -93,49 +93,52 @@ exports.search = function(req, res, next) {
 	var db = req.db;
 	var file = req.files.snapshot;
 
-	if(file == null) res.end();
-	if('image/jpeg' != file.mimetype) res.end();
+	if(null != file && 'image/jpeg' == file.mimetype) {
+		// Call exec to get hash
+		var exec = require('child_process').exec;
+		exec('python utils/PreProcess.py ' + file.path, function (err, stdout, stderr) {
+			hash = stdout;
+			snapshotList = [];
+			count = 0;
 
-	// Call exec to get hash
-	var exec = require('child_process').exec;
-	exec('python utils/PreProcess.py ' + file.path, function (err, stdout, stderr) {
-		hash = stdout;
-		snapshotList = [];
-		count = 0;
+			// Request slave to search the snapshots
+			db.collection('slaves').find({}, function(err, cursor) {
+				cursor.toArray(function(err, documents) {
+					// Check if got hash
+					console.log('Hash: ' + hash);
 
-		// Request slave to search the snapshots
-		db.collection('slaves').find({}, function(err, cursor) {
-			cursor.toArray(function(err, documents) {
-				// Check if got hash
-				console.log('Hash: ' + hash);
+					// Request slave to search snapshot
+					for(i = 0; i < documents.length; i++) {
+						var IP = documents[i].IP;
+						request({
+							uri: 'http://' + IP + '/search',
+							method: "POST",
+							form: {
+								hash: hash
+							}
+						}, function(error, response, body) {
+							// Append response into list
+							if(body != null) {	
+								snapshotList = snapshotList.concat(body);
+							}
 
-				// Request slave to search snapshot
-				for(i = 0; i < documents.length; i++) {
-					var IP = documents[i].ip;
-					request({
-						uri: 'http://' + IP + '/search',
-						method: "POST",
-						form: {
-							hash: hash
-						}
-					}, function(error, response, body) {
-						// Append response into list
-						snapshotList = snapshotList.concat(body);
+							count += 1;
+							if(count == documents.length) {
+								// Finish searching.
+								console.log('DONE!!!');
 
-						count += 1;
-						if(count == documents.length) {
-							// Finish searching.
-							console.log('DONE!!!');
-
-							// Sort snapshot list
-							utils.sortResults(snapshotList, 'distance', true);
-							
-							// Response matched list
-							res.json(snapshotList.slice(0, snapshotList.length >= 10 ? 10 : snapshotList.length));
-						}
-					});
-				}
+								// Sort snapshot list
+								utils.sortResults(snapshotList, 'distance', true);
+								
+								// Response matched list
+								res.json(snapshotList.slice(0, snapshotList.length >= 10 ? 10 : snapshotList.length));
+							}
+						});
+					}
+				});
 			});
 		});
-	});
+	} else {
+		res.send( {error:'錯誤的檔案型態，僅允許 JPG 型態的截圖。'});
+	}
 };

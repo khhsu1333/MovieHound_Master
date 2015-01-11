@@ -18,6 +18,7 @@
     "mongodb": "*",
     "mongoskin": "*",
     "multer":"*",
-    "request":"*"
+    "request":"*",
+    "ejs":"*"
   }
 }
