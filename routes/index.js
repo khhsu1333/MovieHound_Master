@@ -105,6 +105,7 @@ exports.search = function(req, res, next) {
 			hash = stdout;
 			snapshotList = [];
 			count = 0;
+			var cur = new Date();
 
 			// Request slave to search the snapshots
 			db.collection('slaves').find({}, function(err, cursor) {
@@ -114,6 +115,25 @@ exports.search = function(req, res, next) {
 
 					// Request slave to search snapshot
 					for(i = 0; i < documents.length; i++) {
+						start = new Date(documents[i].timestamp);
+						// 若是超過 20 分鐘則判斷 Slave 已經斷線
+						if(cur - start >1200000) {
+							count += 1;
+							if(count == documents.length) {
+								// Finish searching.
+								console.log('DONE!!!');
+
+								// Sort snapshot list
+								utils.sortResults(snapshotList, 'distance', true);
+								
+								// Response matched list
+								res.json(snapshotList.slice(0, snapshotList.length >= 10 ? 10 : snapshotList.length));
+
+								break;
+							}
+							continue;
+						}
+
 						var IP = documents[i].IP;
 						request({
 							uri: 'http://' + IP + '/search',
