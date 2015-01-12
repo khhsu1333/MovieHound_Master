@@ -34,6 +34,7 @@ app.use(function(req,res,next) {
     next();
 });
 app.get('/', routes.index);
+app.get('/manage', routes.manage);
 app.get('/slave', routes.slave);
 app.get('/allocate', routes.allocate);
 app.post('/heartbeat', routes.heartbeat);

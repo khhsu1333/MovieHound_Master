@@ -117,5 +117,4 @@ function searchMovie(event) {
 			alert('發生錯誤，請等待管理人員處理。');
 		}
 	});
-
 }

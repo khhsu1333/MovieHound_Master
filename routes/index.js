@@ -8,6 +8,11 @@ exports.index = function(req, res, next) {
 	res.render('index', { title: 'Express' });
 };
 
+// GET manage page.
+exports.manage = function(req, res, next) {
+	res.render('manage');
+};
+
 // GET slave list.
 exports.slave = function(req, res, next) {
 	var db = req.db;
@@ -124,7 +129,6 @@ exports.search = function(req, res, next) {
 								for(i=0; i < parts.length; i++) {
 									if(parts[i].indexOf('}') == -1)
 										parts[i] += '}';
-									console.log(parts[i]);
 									obj = JSON.parse(parts[i]);
 									snapshotList.push(obj);
 								}
@@ -137,8 +141,6 @@ exports.search = function(req, res, next) {
 
 								// Sort snapshot list
 								utils.sortResults(snapshotList, 'distance', true);
-
-								console.log(snapshotList);
 								
 								// Response matched list
 								res.json(snapshotList.slice(0, snapshotList.length >= 10 ? 10 : snapshotList.length));
