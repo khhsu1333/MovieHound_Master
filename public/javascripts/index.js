@@ -13,7 +13,7 @@ $('#btnSearchMovie').on('click', searchMovie);
 
 // 啟動按鈕特效
 document.getElementById("uploadBtn").onchange = function () {
-    document.getElementById("uploadFile").value = this.value;
+    document.getElementById("uploadFile").value = this.value.replace("C:\\fakepath\\", "");
 };
 
 // 啟動'開始'按鈕
