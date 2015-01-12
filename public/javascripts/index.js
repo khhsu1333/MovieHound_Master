@@ -75,7 +75,7 @@ function searchMovie(event) {
 					tableContent += '<tr>';
 					tableContent += '<td>' + i + '</td>';
 					tableContent += '<td><image src="http://' + this.slave + '/image/' + this.filename + '" /></td>';
-					tableContent += '<td>' + this.movie + '</td>';
+					tableContent += '<td>' + this.zh_title + '</td>';
 					tableContent += '<td>' + this.time + '</td>';
 					similar = '0%';
 					if(this.distance == 0)
