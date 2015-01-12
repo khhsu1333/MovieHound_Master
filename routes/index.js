@@ -118,8 +118,16 @@ exports.search = function(req, res, next) {
 							}
 						}, function(error, response, body) {
 							// Append response into list
-							if(body != null) {	
-								snapshotList = snapshotList.concat(body);
+							if(body != null && body.length != 0) {
+								body = body.slice(1, body.length-1);
+								parts = body.split('},');
+								for(i=0; i < parts.length; i++) {
+									if(parts[i].indexOf('}') == -1)
+										parts[i] += '}';
+									console.log(parts[i]);
+									obj = JSON.parse(parts[i]);
+									snapshotList.push(obj);
+								}
 							}
 
 							count += 1;
@@ -129,6 +137,8 @@ exports.search = function(req, res, next) {
 
 								// Sort snapshot list
 								utils.sortResults(snapshotList, 'distance', true);
+
+								console.log(snapshotList);
 								
 								// Response matched list
 								res.json(snapshotList.slice(0, snapshotList.length >= 10 ? 10 : snapshotList.length));

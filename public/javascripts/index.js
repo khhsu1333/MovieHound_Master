@@ -54,7 +54,6 @@ function searchMovie(event) {
 		success: function(data, textStatus, jqXHR)
 		{
 			if(typeof data.error === 'undefined') {
-				data = $.parseJSON(data);
 				alert('Search complete. Found ' + data.length + ' data.');
 
 				// Success get snapshot list
