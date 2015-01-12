@@ -123,7 +123,7 @@ exports.search = function(req, res, next) {
 							}
 						}, function(error, response, body) {
 							// Append response into list
-							if(body != null && body.length != 0) {
+							if(body != null && body.length != 0 && body.length != 2) {
 								body = body.slice(1, body.length-1);
 								parts = body.split('},');
 								for(i=0; i < parts.length; i++) {
