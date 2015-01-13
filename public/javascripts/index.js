@@ -45,6 +45,7 @@ function searchMovie(event) {
 	$('#btnSearchMovie').attr("disabled", true);
 	$('#result').hide();
 	$('#loading').fadeIn();
+	$('#result table tbody').html('');
 
 
 	var data = new FormData();
